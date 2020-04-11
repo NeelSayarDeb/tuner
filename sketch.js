@@ -1,11 +1,9 @@
-
-
-
 const model_url = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
 let pitch;
 let mic;
 let freq = 0;
 let threshold = 1;
+let loaded = false;
 
 
 let notes = [{
@@ -31,6 +29,10 @@ function touchStarted() {
     if (getAudioContext().state !== 'running') {
       getAudioContext().resume();
       location.reload();
+    } else {
+      createCanvas(400, 400);
+      loaded = true;
+      document.getElementById('buttonBox').remove();
     }
 }
 
@@ -51,12 +53,15 @@ function listening() {
 }
 
 function draw() {
-  background(0);
+  
+
+  if(loaded) {
+    background(0);
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(32);
   text(freq.toFixed(2), width / 2, height - 150);
-
+  
   let closestNote = -1;
   let recordDiff = Infinity;
   for (let i = 0; i < notes.length; i++) {
@@ -67,41 +72,34 @@ function draw() {
     }
   }
 
-  textSize(64);
-  console.log(freq)
-  text(closestNote.note, width / 2, height - 50);
-
-
   let diff = recordDiff;
+    textSize(64);
+    text(closestNote.note, width / 2, height - 50);
+    let alpha = map(abs(diff), 0, 100, 255, 0);
+    rectMode(CENTER);
+    fill(255, alpha);
+    stroke(255);
+    strokeWeight(1);
+    if (abs(diff) < threshold) {
+      fill(0, 255, 0);
+    }
+    rect(200, 100, 200, 50);
 
+    stroke(255);
+    strokeWeight(4);
+    line(200, 0, 200, 200);
 
-  let alpha = map(abs(diff), 0, 100, 255, 0);
-  rectMode(CENTER);
-  fill(255, alpha);
-  stroke(255);
-  strokeWeight(1);
-  if (abs(diff) < threshold) {
-    fill(0, 255, 0);
-  }
-  rect(200, 100, 200, 50);
-
-  stroke(255);
-  strokeWeight(4);
-  line(200, 0, 200, 200);
-
-  noStroke();
-  fill(255, 0, 0);
-  if (abs(diff) < threshold) {
-    fill(0, 255, 0);
-  }
-  rect(200 + diff / 2, 100, 10, 75);
-
-
+    noStroke();
+    fill(255, 0, 0);
+    if (abs(diff) < threshold) {
+      fill(0, 255, 0);
+    }
+    rect(200 + diff / 2, 100, 10, 75);
+  } 
 }
 
 function modelLoaded() {
   console.log('model loaded');
-  createCanvas(400, 400);
   pitch.getPitch(gotPitch);
 }
 
@@ -109,7 +107,6 @@ function gotPitch(error, frequency) {
   if (error) {
     console.error(error);
   } else {
-    //console.log(frequency);
     if (frequency) {
       freq = frequency;
     }
